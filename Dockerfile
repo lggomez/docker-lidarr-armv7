@@ -1,13 +1,13 @@
 # syntax=docker/dockerfile:1
 
-FROM ghcr.io/linuxserver/baseimage-alpine:3.18
+FROM alpine:3.19
 
 # set version label
 ARG BUILD_DATE
 ARG VERSION
 ARG LIDARR_RELEASE
-LABEL build_version="Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}"
-LABEL maintainer="thelamer"
+LABEL build_version="Linuxserver.io armv7 fork version:- ${VERSION} Build-date:- ${BUILD_DATE}"
+LABEL maintainer="lggomez"
 
 # environment settings
 ARG LIDARR_BRANCH="master"
@@ -19,6 +19,8 @@ RUN \
     chromaprint \
     icu-libs \
     sqlite-libs \
+    curl \
+    jq \
     xmlstarlet && \
   echo "**** install lidarr ****" && \
   mkdir -p /app/lidarr/bin && \
@@ -28,7 +30,7 @@ RUN \
   fi && \
   curl -o \
     /tmp/lidarr.tar.gz -L \
-    "https://lidarr.servarr.com/v1/update/${LIDARR_BRANCH}/updatefile?version=${LIDARR_RELEASE}&os=linuxmusl&runtime=netcore&arch=x64" && \
+    "https://lidarr.servarr.com/v1/update/${LIDARR_BRANCH}/updatefile?version=${LIDARR_RELEASE}&os=linuxmusl&runtime=netcore&arch=arm" && \
   tar xzf \
     /tmp/lidarr.tar.gz -C \
     /app/lidarr/bin --strip-components=1 && \
@@ -45,3 +47,5 @@ COPY root/ /
 EXPOSE 8686
 
 VOLUME /config
+
+ENTRYPOINT ./app/lidarr/bin/Lidarr && bash
