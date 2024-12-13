@@ -28,7 +28,7 @@ Find us at:
 
 # [linuxserver/lidarr](https://github.com/linuxserver/docker-lidarr)
 
-[![Scarf.io pulls](https://scarf.sh/installs-badge/linuxserver-ci/linuxserver%2Flidarr?color=94398d&label-color=555555&logo-color=ffffff&style=for-the-badge&package-type=docker)](https://scarf.sh/gateway/linuxserver-ci/docker/linuxserver%2Flidarr)
+[![Scarf.io pulls](https://scarf.sh/installs-badge/linuxserver-ci/linuxserver%2Flidarr?color=94398d&label-color=555555&logo-color=ffffff&style=for-the-badge&package-type=docker)](https://scarf.sh)
 [![GitHub Stars](https://img.shields.io/github/stars/linuxserver/docker-lidarr.svg?color=94398d&labelColor=555555&logoColor=ffffff&style=for-the-badge&logo=github)](https://github.com/linuxserver/docker-lidarr)
 [![GitHub Release](https://img.shields.io/github/release/linuxserver/docker-lidarr.svg?color=94398d&labelColor=555555&logoColor=ffffff&style=for-the-badge&logo=github)](https://github.com/linuxserver/docker-lidarr/releases)
 [![GitHub Package Repository](https://img.shields.io/static/v1.svg?color=94398d&labelColor=555555&logoColor=ffffff&style=for-the-badge&label=linuxserver.io&message=GitHub%20Package&logo=github)](https://github.com/linuxserver/docker-lidarr/packages)
@@ -71,21 +71,28 @@ This image provides various versions that are available via tags. Please read th
 
 Access the webui at `<your-ip>:8686`, for more information check out [Lidarr](https://github.com/lidarr/Lidarr).
 
-Special Note: Following our current folder structure will result in an inability to hardlink from your downloads to your Music folder because they are on seperate volumes. To support hardlinking, simply ensure that the Music and downloads data are on a single volume. For example, if you have /mnt/storage/Music and /mnt/storage/downloads/completed/Music, you would want something like /mnt/storage:/media for your volume. Then you can hardlink from /media/downloads/completed to /media/Music.
+Special Note: Following our current folder structure will result in an inability to hardlink from your downloads to your Music folder because they are on separate volumes. To support hardlinking, simply ensure that the Music and downloads data are on a single volume. For example, if you have /mnt/storage/Music and /mnt/storage/downloads/completed/Music, you would want something like /mnt/storage:/media for your volume. Then you can hardlink from /media/downloads/completed to /media/Music.
 
-Another item to keep in mind, is that within lidarr itself, you should then map your download client folder to your lidarr folder: Settings -> Download Client -> advanced -> remote path mappings. I input the host of my download client (matches the download client defined) remote path is /downloads/Music (relative to the internal container path) and local path is /media/downloads/completed/Music, assuming you have folders to seperate your downloaded data types.
+Another item to keep in mind, is that within Lidarr itself, you should then map your download client folder to your Lidarr folder: Settings -> Download Client -> advanced -> remote path mappings. I input the host of my download client (matches the download client defined) remote path is /downloads/Music (relative to the internal container path) and local path is /media/downloads/completed/Music, assuming you have folders to separate your downloaded data types.
 
 ### Media folders
 
 We have set `/music` and `/downloads` as ***optional paths***, this is because it is the easiest way to get started. While easy to use, it has some drawbacks. Mainly losing the ability to hardlink (TL;DR a way for a file to exist in multiple places on the same file system while only consuming one file worth of space), or atomic move (TL;DR instant file moves, rather than copy+delete) files while processing content.
 
-Use the optional paths if you dont understand, or dont want hardlinks/atomic moves.
+Use the optional paths if you don't understand, or don't want hardlinks/atomic moves.
 
 The folks over at servarr.com wrote a good [write-up](https://wiki.servarr.com/docker-guide#consistent-and-well-planned-paths) on how to get started with this.
+
+## Read-Only Operation
+
+This image can be run with a read-only container filesystem. For details please [read the docs](https://docs.linuxserver.io/misc/read-only/).
 
 ## Usage
 
 To help you get started creating a container from this image you can either use docker-compose or the docker cli.
+
+>[!NOTE]
+>Unless a parameter is flaged as 'optional', it is *mandatory* and a value must be provided.
 
 ### docker-compose (recommended, [click here for more info](https://docs.linuxserver.io/general/docker-compose))
 
@@ -100,7 +107,7 @@ services:
       - PGID=1000
       - TZ=Etc/UTC
     volumes:
-      - /path/to/appdata/config:/config
+      - /path/to/lidarr/config:/config
       - /path/to/music:/music #optional
       - /path/to/downloads:/downloads #optional
     ports:
@@ -117,7 +124,7 @@ docker run -d \
   -e PGID=1000 \
   -e TZ=Etc/UTC \
   -p 8686:8686 \
-  -v /path/to/appdata/config:/config \
+  -v /path/to/lidarr/config:/config \
   -v /path/to/music:/music `#optional` \
   -v /path/to/downloads:/downloads `#optional` \
   --restart unless-stopped \
@@ -130,13 +137,14 @@ Containers are configured using parameters passed at runtime (such as those abov
 
 | Parameter | Function |
 | :----: | --- |
-| `-p 8686` | Application WebUI |
+| `-p 8686:8686` | Application WebUI |
 | `-e PUID=1000` | for UserID - see below for explanation |
 | `-e PGID=1000` | for GroupID - see below for explanation |
 | `-e TZ=Etc/UTC` | specify a timezone to use, see this [list](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List). |
 | `-v /config` | Configuration files for Lidarr. |
 | `-v /music` | Music files (See note in Application setup). |
 | `-v /downloads` | Path to your download folder for music (See note in Application setup). |
+| `--read-only=true` | Run container with a read-only filesystem. Please [read the docs](https://docs.linuxserver.io/misc/read-only/). |
 
 ## Environment variables from files (Docker secrets)
 
@@ -274,7 +282,8 @@ Below are the instructions for updating containers:
 
 ### Image Update Notifications - Diun (Docker Image Update Notifier)
 
-**tip**: We recommend [Diun](https://crazymax.dev/diun/) for update notifications. Other tools that automatically update containers unattended are not recommended or supported.
+>[!TIP]
+>We recommend [Diun](https://crazymax.dev/diun/) for update notifications. Other tools that automatically update containers unattended are not recommended or supported.
 
 ## Building locally
 
@@ -289,16 +298,18 @@ docker build \
   -t lscr.io/linuxserver/lidarr:latest .
 ```
 
-The ARM variants can be built on x86_64 hardware using `multiarch/qemu-user-static`
+The ARM variants can be built on x86_64 hardware and vice versa using `lscr.io/linuxserver/qemu-static`
 
 ```bash
-docker run --rm --privileged multiarch/qemu-user-static:register --reset
+docker run --rm --privileged lscr.io/linuxserver/qemu-static --reset
 ```
 
 Once registered you can define the dockerfile to use with `-f Dockerfile.aarch64`.
 
 ## Versions
 
+* **31.05.24:** - Rebase Alpine 3.20.
+* **20.03.24:** - Rebase Alpine 3.19.
 * **06.06.23:** - Rebase master to Alpine 3.18, deprecate armhf as per [https://www.linuxserver.io/armhf](https://www.linuxserver.io/armhf).
 * **17.01.23:** - Rebase master branch to Alpine 3.17, migrate to s6v3.
 * **06.06.22:** - Rebase master branch to Alpine 3.15.

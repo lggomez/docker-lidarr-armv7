@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM alpine:3.19
+FROM alpine:3.20
 
 # set version label
 ARG BUILD_DATE
@@ -11,7 +11,9 @@ LABEL maintainer="lggomez"
 
 # environment settings
 ARG LIDARR_BRANCH="master"
-ENV XDG_CONFIG_HOME="/config/xdg"
+ENV XDG_CONFIG_HOME="/config/xdg" \
+  COMPlus_EnableDiagnostics=0 \
+  TMPDIR=/run/lidarr-temp
 
 RUN \
   echo "**** install packages ****" && \
@@ -35,6 +37,7 @@ RUN \
     /tmp/lidarr.tar.gz -C \
     /app/lidarr/bin --strip-components=1 && \
   echo -e "UpdateMethod=docker\nBranch=${LIDARR_BRANCH}\nPackageVersion=${VERSION}\nPackageAuthor=[linuxserver.io](https://linuxserver.io)" > /app/lidarr/package_info && \
+  printf "Linuxserver.io version: ${VERSION}\nBuild-date: ${BUILD_DATE}" > /build_version && \
   echo "**** cleanup ****" && \
   rm -rf \
     /app/lidarr/bin/Lidarr.Update \
