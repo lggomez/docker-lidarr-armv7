@@ -6,6 +6,7 @@ project_url: "https://github.com/lidarr/Lidarr"
 project_logo: "https://github.com/lidarr/Lidarr/raw/develop/Logo/400.png"
 project_blurb: "[{{ project_name|capitalize }}]({{ project_url }}) is a music collection manager for Usenet and BitTorrent users. It can monitor multiple RSS feeds for new tracks from your favorite artists and will grab, sort and rename them. It can also be configured to automatically upgrade the quality of files already downloaded when a better quality format becomes available."
 project_lsio_github_repo_url: "https://github.com/linuxserver/docker-{{ project_name }}"
+project_categories: "Media Management,Music"
 # supported architectures
 available_architectures:
   - {arch: "{{ arch_x86_64 }}", tag: "amd64-latest"}
@@ -30,6 +31,7 @@ param_usage_include_ports: true
 param_ports:
   - {external_port: "8686", internal_port: "8686", port_desc: "Application WebUI"}
 readonly_supported: true
+nonroot_supported: true
 # application setup block
 app_setup_block_enabled: true
 app_setup_block: |
@@ -63,34 +65,31 @@ init_diagram: |
     init-migrations -> init-adduser
     init-os-end -> init-config
     init-config -> init-config-end
+    init-crontab-config -> init-config-end
     init-lidarr-config -> init-config-end
-    init-os-end -> init-crontab-config
+    init-config -> init-crontab-config
     init-mods-end -> init-custom-files
     base -> init-envfile
     init-config -> init-lidarr-config
     base -> init-migrations
-    base -> init-mods
     init-config-end -> init-mods
-    init-mods -> init-mods-end
     init-mods-package-install -> init-mods-end
     init-mods -> init-mods-package-install
-    base -> init-os-end
     init-adduser -> init-os-end
     init-envfile -> init-os-end
-    init-migrations -> init-os-end
     init-custom-files -> init-services
-    init-mods-end -> init-services
     init-services -> svc-cron
     svc-cron -> legacy-services
     init-services -> svc-lidarr
     svc-lidarr -> legacy-services
   }
   Base Images: {
-    "baseimage-alpine:3.20"
+    "baseimage-alpine:3.21"
   }
   "lidarr:latest" <- Base Images
 # changelog
 changelogs:
+  - {date: "23.12.24:", desc: "Rebase Alpine 3.21."}
   - {date: "31.05.24:", desc: "Rebase Alpine 3.20."}
   - {date: "20.03.24:", desc: "Rebase Alpine 3.19."}
   - {date: "06.06.23:", desc: "Rebase master to Alpine 3.18, deprecate armhf as per [https://www.linuxserver.io/armhf](https://www.linuxserver.io/armhf)."}
